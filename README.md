@@ -8,7 +8,7 @@ MS ID#: BIORXIV/2022/509651
 Each script independently reproduces the corresponding figure or table from the manuscript.
 The repository includes all the data required for full reproduction of the results in this study.
 
-*Note: before producing figures 4 and 5, please run the table 2 script. 
+*Note: before producing figures 4 and 5, please run the table 2 script.*
 
 ## Author:
 Eduard Fadeev([dr.eduard.fadeev@gmail.com](mailto:dr.eduard.fadeev@gmail.com)) 
