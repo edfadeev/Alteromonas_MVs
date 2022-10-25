@@ -14,18 +14,6 @@ source_dbs <- c("NCBI_PGAP","COG20_FUNCTION","COG20_CATEGORY","COG20_PATHWAY",
                 "GO","Pfam","InterPro","MetaCyc", 
                 "KOfam","KEGG_Class","KEGG_Module") 
 
-#import the list of unique genes per genome
-unique_genes<- read.table(paste0(wd,"Ref_genomes/Bins_gene_list.txt"), 
-                        sep = "|", col.names = c("Gene_group", "Gene_cluster",
-                                              "Strain","gene_callers_id")) %>%
-                        mutate(Gene_group = ifelse(Gene_group %in% strains, "unique",
-                                                   "core"),
-                               Gene_cluster = gsub("gene_cluster.","",Gene_cluster),
-                               Strain = gsub("genome_name.","",Strain),
-                               gene_callers_id = as.integer(gsub("gene_callers_id.","",gene_callers_id)))
-                      
-
-
 
 ################################################################################
 #generate phyloseq objects for each strain and export it
