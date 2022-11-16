@@ -4,7 +4,7 @@ require(purrr)
 require(phyloseq)
 
 #define working directory with the files
-path.NTA <- "Data/PD_results/"
+wd <- "Data/PD_results/"
 
 #set variables
 strains <- c("Amac_ATCC27126","Amac_AD45","Amac_HOT1A3","Amac_BS11",
@@ -22,16 +22,16 @@ for (str in strains) {
   #############################################
   #import annotation of the genomes from anvio
   #############################################
-  gene_type <- unique_genes %>%  filter(Strain == str)
+  #gene_type <- unique_genes %>%  filter(Strain == str)
   
   #genes list
-  gene_annotations_df <- read.csv(paste0(wd,"Ref_genomes/functions/",str,"-genes.txt"),
-                                  sep="\t", h= T) %>% 
-                          left_join(gene_type, by = "gene_callers_id")
+  gene_annotations_df <- read.csv(paste0(wd,"Ref_annotations/",str,"-genes.txt"),
+                                  sep="\t", h= T) #%>% 
+                          #left_join(gene_type, by = "gene_callers_id")
     
   
   
-  source_files <- list.files(path = paste0(wd,"Ref_genomes/functions/"), 
+  source_files <- list.files(path = paste0(wd,"Ref_annotations/"), 
                               pattern = paste0("*",str,"-.*functions\\.txt"),
                               full.names = TRUE)
   
@@ -56,7 +56,7 @@ for (str in strains) {
                     replace(is.na(.), "Unk")
 
   gene_meta_df <- gene_annotations_df %>% 
-                  select(gene_callers_id, Gene_group, Gene_cluster, contig, start, stop, partial, aa_sequence) %>% 
+                  select(gene_callers_id, contig, start, stop, partial, aa_sequence) %>% 
                   merge(annotations_df, by = "gene_callers_id") %>% 
                   mutate(prot_length = nchar(aa_sequence)) %>% 
                   mutate(rows = gene_callers_id) %>% 
@@ -69,7 +69,7 @@ for (str in strains) {
   #############################################
   sample_names <- c(MP_1 = "S_1", MP_2 = "S_2", EV_1 = "S_3", EV_2 = "S_4")
   
-  metaP_raw <- read.csv(paste0(wd,"PD_results/",str,"-Proteins.txt"),
+  metaP_raw <- read.csv(paste0(wd,str,"-Proteins.txt"),
                         sep="\t", h= T)%>% 
     dplyr::rename(gene_caller_id = Accession) %>% 
     mutate_if(is.numeric, funs(replace_na(., 0))) %>% 
@@ -104,7 +104,7 @@ for (str in strains) {
   phyloseq_clean <- prune_taxa(taxa_sums(phyloseq)>0, phyloseq)
   
   #export phyloseq object
-  saveRDS(phyloseq_clean, paste0(wd,"Data/PD2phy/", str,"_phyloseq.rds"))
+  saveRDS(phyloseq_clean, paste0("Data/PD2phy/", str,"_phyloseq.rds"))
 }
 
 #clean workspace

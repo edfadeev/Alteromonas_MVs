@@ -149,7 +149,7 @@ EVs_COGs_sums %>%
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90))
 
-ggsave(paste0(wd,"R_data/figures/","EVs_COGs_sums.pdf"),
+ggsave(paste0("Figures/","EVs_COGs_sums.pdf"),
        plot = last_plot(),
        units = "cm",
        width = 30, height = 30, 
