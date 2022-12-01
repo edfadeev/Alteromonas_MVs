@@ -102,6 +102,39 @@ prot_sig_list <- lapply(strains, function(x) {
 names(prot_sig_list) <- strains 
 
 ########################################
+#Explore how many MV proteins shared between strains
+########################################
+#import the list of gene clusters
+gene_cluster <- read.csv("Data/anvio/Alteromonas-Pangenome_gene_clusters_summary.txt", sep="\t", h= T) %>% 
+  select("genome_name", "gene_callers_id", "gene_cluster_id")
+
+
+MV_prot_overlap_list <- lapply(strains, function(x) {
+  gene_cluster_strain <- gene_cluster %>%  filter(genome_name == x)
+  
+  prot_EV <- prot_nsaf_list[[x]] %>%
+    select(c("gene_caller_id","Sample","Strain","Abundance")) %>% 
+    dplyr::rename(gene_callers_id = gene_caller_id) %>% 
+    mutate(gene_callers_id = as.integer(gene_callers_id)) %>% 
+    filter(Sample =="EV", Abundance >0.00) %>% 
+    left_join(gene_cluster_strain, by = "gene_callers_id") %>% 
+    select(gene_cluster_id,Strain)
+  
+    return(prot_EV)
+      })
+
+MV_prot_overlap_df <- MV_prot_overlap_list %>%  reduce(full_join, by = c("gene_cluster_id")) %>% 
+                      rename_with(~ c("gene_cluster_id", strains)) %>% unique() %>% 
+                      mutate_at(vars(strains), funs(case_when(is.na(.)~0, TRUE ~ 1))) %>% 
+                      group_by(gene_cluster_id) %>% 
+                      mutate(Total = sum(across(strains)))
+
+#total protein clusters shared between all strains
+MV_prot_overlap_df %>% filter(Total == 6) %>% dim()
+
+
+
+########################################
 #Explore the most abundant proteins
 ########################################
 #calculate overlaps of proteins between fractions
