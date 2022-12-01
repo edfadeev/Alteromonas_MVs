@@ -1,0 +1,87 @@
+####################################
+#Preparations
+####################################
+
+#connect to the SCC with port forwarding
+ssh -L 5678:localhost:5678 slurm
+
+#activate environment
+conda activate /apps/anvio/7
+
+module load ncbiblast/2.2.26
+module load ncbiblastplus/2.11.0
+
+#define working directory
+WORK_DIR="/scratch/oceanography/efadeev/MEVIMBA/Alteromonas_phylogeny"
+
+cd $WORK_DIR
+
+mkdir Log
+mkdir anvio
+
+####################################
+#import genomes to anvio and annotate them
+####################################
+#generate anvio database from genome and annotate it using anvio
+sbatch --array=0-5 ../source/genome2anvio.sh
+
+#move interproscan parsing script into the home directory 
+cp /scratch/oceanography/efadeev/anvio-resources/InterProScanParser/iprs2anvio.sh ./anvio/
+
+#run functional annotation of the genomes
+sbatch --array=0-5 ../source/genome_annotation.sh
+
+#remove the parsing script and temportary files
+rm ./anvio/iprs2anvio.sh ./anvio/*functions-*
+
+
+#Export genes for proteome analysis
+sbatch --array=0-5 ../source/export4R.sh
+
+
+####################################
+#Generate phylogenetic tree based on core genes
+####################################
+#generate databases list
+echo -e "name\tcontigs_db_path" > Alteromonas-genomes.txt
+for file in ./anvio/*.db ;
+do name="$(basename -- $file| sed 's/\..*//g'| sed 's/-/_/g')"
+echo -e "${name}\t${file}" >> Alteromonas-genomes.txt ;
+done
+
+#generate genomes merged database
+anvi-gen-genomes-storage -e Alteromonas-genomes.txt -o Alteromonas-GENOMES.db
+
+#calculate phylogenomic treebased on single copy genes with geometric homogeniety and functional homogeniety up to 0.9
+sbatch ../source/anvio-core-phylo-tree.sh
+
+## Gene clusters that passed the filter (2515) ## 
+
+anvi-interactive --tree ./Alteromonas-tree/phylo_core_genome_clean.fa.contree -p phylo-profile.db --manual --server-only -P 5678
+
+
+####################################
+#Generate pangenome with phylogenetic tree and ANI (no outgroup)
+####################################
+#remove the outgroup Alt. 76-1
+sed "/Amac_76_1/d" Alteromonas-genomes.txt > Alteromonas-pan.txt
+
+#generate genomes merged database
+anvi-gen-genomes-storage -e Alteromonas-pan.txt --gene-caller NCBI_PGAP -o Alteromonas-pan-GENOMES.db
+
+#calculate pangenome
+sbatch ../source/anvio-pangenome.sh
+
+#Construct phylogenomic tree based on single copy genes with geometric homogeniety and functional homogeniety up to 0.9
+sbatch ../source/phylogenomic_tree.sh
+
+## Gene clusters that passed the filter (2828) ## 
+
+#calculate average nucleootide identity
+sbatch ../source/calculate_ANI.sh
+
+#display pangenome
+anvi-display-pan -g ./Alteromonas-pan-GENOMES.db --pan-db ./Alteromonas-Pangenome/Alteromonas-Pangenome-PAN.db --server-only -P 5678
+
+#Produce summary of the pangenome
+anvi-summarize -p Alteromonas-Pangenome/Alteromonas-Pangenome-PAN.db -g Alteromonas-pan-GENOMES.db --collection-name default -o Pan_summary

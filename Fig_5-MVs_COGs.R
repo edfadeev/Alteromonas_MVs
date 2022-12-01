@@ -52,17 +52,9 @@ top_prot_list<- lapply(strains, function(x) {
     filter(Sample == "MP") %>%
     slice_max(Abundance, prop = 0.05) 
   
-  writeFasta(top_prot_MP[,c("gene_caller_id","aa_sequence")],
-             paste0("Data/Localization/CELLO2GO/",x,"_MP_top_proteins.fasta"))
-  
-  
   top_prot_EV<- prot_nsaf %>% 
     filter(Sample == "EV") %>%
     slice_max(Abundance, prop = 0.05) 
-  
-  writeFasta(top_prot_EV[,c(c("gene_caller_id","aa_sequence"))],
-             paste0(wd,"Localization/CELLO2GO/",x,"_EV_top_proteins.fasta"))
-  
   
   top_prot<- rbind(top_prot_MP,top_prot_EV)
   
