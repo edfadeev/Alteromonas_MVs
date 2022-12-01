@@ -15,7 +15,7 @@ se <- function(x, na.rm=FALSE) {
 #Import particle data
 ###########################################
 #define working directory with the files
-path.NTA <- "/Users/eduardfadeev/Google Drive (dr.eduard.fadeev@gmail.com)/Manuscripts/Alteromonas_vesicle_production/Data/Fig_2-MVs_size_distribution/"
+path.NTA <- "Data/Fig_2-MVs_size_distribution/"
 
 #list all Experiment files
 ParticleData_files <- list.files(path=path.NTA, pattern = "-ExperimentSummary.csv",
@@ -43,3 +43,30 @@ tidy_data <- bind_rows(particleData_list) %>%
 
 rm(particleData_list)
 
+###########################################
+#Bin the particle data
+###########################################
+#calculate mean for each particle size
+tidy_data_mean <- tidy_data %>% 
+  mutate(Strain = case_when(Strain =="ATCC" ~ "ATCC27126",
+                            Strain =="MIT" ~ "MIT1002",
+                            TRUE ~ Strain)) %>%
+  group_by(Strain, particle_size) %>% 
+  summarise(Count_mean = mean(Count),
+            Count_sd = sd(Count)) %>% 
+  mutate(Strain = factor(Strain, levels = c("AD45","ATCC27126","BGP6","BS11","HOT1A3","MIT1002")))
+
+#plot size distribution  
+tidy_data_mean %>% 
+  ggplot(aes(x = particle_size, y = Count_mean)) +
+  geom_errorbar(aes(ymin = Count_mean-Count_sd, ymax = Count_mean+Count_sd), colour = "gray50", alpha=0.1)+
+  geom_line(size =1)+
+  stat_peaks(colour = "black", span = 31, geom = "text", vjust = -2, label.fmt ="%.f",
+             ignore_threshold = 0.2)+
+  facet_wrap(. ~ Strain, scales = "free_y")+  #different y axis
+  scale_y_continuous(labels=scales::scientific_format())+
+  xlim(0, 450)+
+  labs(y="Concentration (particle/ml)", x = "Size (nm)")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.position = "bottom")

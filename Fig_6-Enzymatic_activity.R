@@ -10,7 +10,7 @@ require(reshape2)
 #Create standard curves for MUF and MCA
 ###########################################
 #import data
-curves_raw <- read.csv("data/EEA_cal_curves.csv",
+curves_raw <- read.csv("Data/Fig_6-Enzymatic_activity/EEA_cal_curves.csv",
                        header=T, row.names=1, sep=",")
 
 #calculate mean per each concentration and subtract the blank
@@ -45,7 +45,7 @@ std_curves.lm <-std_curves %>%
 #Calculate concentrations based on calibration curves
 ###########################################
 #import data
-raw_measurements <- read.csv("data/EEA_measurements.csv",
+raw_measurements <- read.csv("Data/Fig_6-Enzymatic_activity/EEA_measurements.csv",
                              header=T, row.names=1, sep=",")
 
 #calculate the mean fluorescence and substruct the blank
@@ -100,46 +100,6 @@ sample_data.act %>%
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
         text=element_text(size=14),legend.position = "bottom")
-
-
-
-
-
-sample_data.act.prop <- sample_data.act %>% 
-  group_by(replicate, substrate,t) %>% 
-  mutate(activity.prop.022 = activity.nM_h[fraction=="0.2um-filtrate"]/activity.nM_h[fraction=="total-fraction"],
-         activity.prop.MVs = activity.nM_h[fraction=="100kDa-concentrate"]/activity.nM_h[fraction=="total-fraction"],
-         activity.prop.free = activity.nM_h[fraction=="100kDa-outflow"]/activity.nM_h[fraction=="total-fraction"]) %>% 
-  select(t, replicate, substrate, activity.prop.022, activity.prop.MVs, activity.prop.free) %>% 
-  melt() %>% 
-  mutate(value = as.numeric(value)) %>% 
-  filter(value > 0) %>%
-  group_by(variable, substrate,t) %>% 
-  summarize(prop.mean = mean(value), prop.se = se(value))
-
-
-
-
-
-sample_data.act.prop %>% 
-  ggplot(aes(x=variable, y = prop.mean)) +
-  geom_col()+
-  geom_errorbar(aes(ymin=prop.mean-prop.se, ymax=prop.mean+prop.se),
-                width=.2) +
-  facet_wrap(substrate~t, scales = "free_y", ncol = 2)+
-  theme_bw(base_size=14)+
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
-        text=element_text(size=14),legend.position = "bottom")
-
-
-
-
-
-
-# New facet label names for substrate variable
-enzyme.labs <- c("LAPase", "AGase", "BGase", "APase")
-names(enzyme.labs) <- c("MCA-Leucine", "MUF-alpha-glucoside", "MUF-beta-glucoside", "MUF-Phosphate")
 
 
 

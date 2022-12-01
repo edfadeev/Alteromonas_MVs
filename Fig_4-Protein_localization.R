@@ -7,6 +7,8 @@ require(dplyr)
 require(tidyr)
 
 source("scripts/write_fasta.R")
+source("scripts/nsaf_trans.R")
+
 
 cbbPalette <- c( "#E69F00", "#56B4E9", "#009E73", 
                  "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -48,7 +50,7 @@ top_prot_list<- lapply(strains, function(x) {
     slice_max(Abundance, prop = 0.05) 
   
   writeFasta(top_prot_EV[,c(c("gene_caller_id","aa_sequence"))],
-          paste0(wd,"Localization/CELLO2GO/",x,"_EV_top_proteins.fasta"))
+          paste0("Data/Localization/CELLO2GO/",x,"_EV_top_proteins.fasta"))
   
   
   top_prot<- rbind(top_prot_MP,top_prot_EV)
@@ -155,3 +157,10 @@ ggplot(prot_loc_df,
         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
         axis.text.x =element_text(angle = 90),
         legend.position = "bottom")
+
+ggsave(paste0("Figures/","Fig_4-localizations.pdf"),
+       plot = last_plot(),
+       units = "cm",
+       width = 30, height = 30, 
+       #scale = 1,
+       dpi = 300)
